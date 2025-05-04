@@ -9,9 +9,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	HttpGET    HttpMethod = "GET"
+	HttpPOST   HttpMethod = "POST"
+	HttpPUT    HttpMethod = "PUT"
+	HttpDELETE HttpMethod = "DELETE"
+)
+
+type HttpMethod string
+
 var errNotFound = errors.New("not found")
 
 type Router interface {
+	// call it before Serve()
+	SetupRoutes()
+
 	// NOTE: it's blocking method
 	Serve()
 }
@@ -56,4 +68,20 @@ func (r *router) Serve(host, port string, h RouterHandler) error {
 	})
 
 	return r.engine.Run(fmt.Sprintf("%s:%s", host, port))
+}
+
+type Route struct {
+	Endpoint   string
+	HttpMethod HttpMethod
+	Handler    gin.HandlerFunc
+}
+
+func (r *router) SetupRoutes(routes []Route) {
+	for _, routeData := range routes {
+		r.engine.Handle(
+			string(routeData.HttpMethod),
+			routeData.Endpoint,
+			routeData.Handler,
+		)
+	}
 }
