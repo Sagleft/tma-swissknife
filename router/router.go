@@ -12,6 +12,7 @@ import (
 var errNotFound = errors.New("not found")
 
 type Router interface {
+	// NOTE: it's blocking method
 	Serve()
 }
 
@@ -29,7 +30,7 @@ func New() *router {
 	}
 }
 
-func (r *router) Serve(host, port string, h RouterHandler) {
+func (r *router) Serve(host, port string, h RouterHandler) error {
 	r.engine.GET("/ping", func(ctx *gin.Context) {
 		onSuccess(ctx, "pong")
 	})
@@ -54,9 +55,5 @@ func (r *router) Serve(host, port string, h RouterHandler) {
 		ctx.JSON(http.StatusOK, response)
 	})
 
-	go func() {
-		if err := r.engine.Run(fmt.Sprintf("%s:%s", host, port)); err != nil {
-			panic(err)
-		}
-	}()
+	return r.engine.Run(fmt.Sprintf("%s:%s", host, port))
 }
