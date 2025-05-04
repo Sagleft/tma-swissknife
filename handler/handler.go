@@ -16,7 +16,8 @@ type handler struct {
 	methods map[string]HandlerFunc
 }
 
-type HandlerFunc func(data any) (rest.Message, error)
+// data - data from json request
+type HandlerFunc func(data map[string]any) (rest.Message, error)
 
 func New() *handler {
 	return &handler{}
