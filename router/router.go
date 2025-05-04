@@ -27,6 +27,9 @@ type Router interface {
 	// call it before Serve()
 	SetupTemplates()
 
+	// call it before Serve()
+	SetupStaticFiles()
+
 	// NOTE: it's blocking method
 	Serve()
 }
@@ -90,8 +93,9 @@ func (r *router) SetupRoutes(routes []Route) {
 }
 
 type TemplateConfig struct {
-	Path             string   `json:"path"`       // example: "templates/*"
-	CustomDelimeters []string `json:"delimeters"` // example: "{[{", "}]}"
+	Path             string   `json:"path"`            // example: "templates/*"
+	CustomDelimeters []string `json:"delimeters"`      // example: "{[{", "}]}"
+	StaticAssetsPath string   `json:"staticFilesPath"` // example: "./public"
 }
 
 func (r *router) SetupTemplates(cfg TemplateConfig) {
@@ -99,5 +103,8 @@ func (r *router) SetupTemplates(cfg TemplateConfig) {
 		r.engine.Delims(cfg.CustomDelimeters[0], cfg.CustomDelimeters[1])
 	}
 
+	if cfg.StaticAssetsPath != "" {
+		r.engine.Static("/assets", cfg.StaticAssetsPath)
+	}
 	r.engine.LoadHTMLGlob(cfg.Path)
 }
