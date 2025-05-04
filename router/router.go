@@ -26,7 +26,7 @@ type Router interface {
 	SetupRoutes()
 	SetupTemplates()
 	SetupStaticFiles()
-	SetupTLS(enabled bool, domains ...string)
+	SetupTLS(enabled bool, domains ...string) error
 
 	// NOTE: it's blocking method
 	Serve()
@@ -107,8 +107,9 @@ func (r *router) SetupTemplates(cfg TemplateConfig) {
 	r.engine.LoadHTMLGlob(cfg.Path)
 }
 
-func (r *router) SetupTLS(enabled bool, domains ...string) {
+func (r *router) SetupTLS(enabled bool, domains ...string) error {
 	if enabled {
-		autotls.Run(r.engine, domains...)
+		return autotls.Run(r.engine, domains...)
 	}
+	return nil
 }
