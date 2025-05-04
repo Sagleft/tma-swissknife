@@ -24,6 +24,9 @@ type Router interface {
 	// call it before Serve()
 	SetupRoutes()
 
+	// call it before Serve()
+	SetupTemplates()
+
 	// NOTE: it's blocking method
 	Serve()
 }
@@ -84,4 +87,17 @@ func (r *router) SetupRoutes(routes []Route) {
 			routeData.Handler,
 		)
 	}
+}
+
+type TemplateConfig struct {
+	Path             string   `json:"path"`       // example: "templates/*"
+	CustomDelimeters []string `json:"delimeters"` // example: "{[{", "}]}"
+}
+
+func (r *router) SetupTemplates(cfg TemplateConfig) {
+	if len(cfg.CustomDelimeters) > 1 {
+		r.engine.Delims(cfg.CustomDelimeters[0], cfg.CustomDelimeters[1])
+	}
+
+	r.engine.LoadHTMLGlob(cfg.Path)
 }
