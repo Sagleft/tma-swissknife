@@ -18,9 +18,8 @@ type handler struct {
 
 type HandlerFunc func(data any) (rest.Message, error)
 
-func New() (*handler, error) {
-	h := &handler{}
-	return h, nil
+func New() *handler {
+	return &handler{}
 }
 
 func (h *handler) Init(methods map[string]HandlerFunc) {
