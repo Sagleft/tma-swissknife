@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Sagleft/tma-swissknife/rest"
+	"github.com/gin-gonic/autotls"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,15 +21,12 @@ type HttpMethod string
 
 var errNotFound = errors.New("not found")
 
+// all setups must be called before Serve()
 type Router interface {
-	// call it before Serve()
 	SetupRoutes()
-
-	// call it before Serve()
 	SetupTemplates()
-
-	// call it before Serve()
 	SetupStaticFiles()
+	SetupTLS(enabled bool, domains ...string)
 
 	// NOTE: it's blocking method
 	Serve()
@@ -107,4 +105,10 @@ func (r *router) SetupTemplates(cfg TemplateConfig) {
 		r.engine.Static("/assets", cfg.StaticAssetsPath)
 	}
 	r.engine.LoadHTMLGlob(cfg.Path)
+}
+
+func (r *router) SetupTLS(enabled bool, domains ...string) {
+	if enabled {
+		autotls.Run(r.engine, domains...)
+	}
 }
