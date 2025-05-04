@@ -33,7 +33,6 @@ func Success(data any) Message {
 	}
 }
 
-type Request struct {
-	Method string `json:"method"`
-	Data   any    `json:"data"`
+func OK() Message {
+	return Success("OK")
 }
