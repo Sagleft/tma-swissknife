@@ -23,13 +23,12 @@ var errNotFound = errors.New("not found")
 
 // all setups must be called before Serve()
 type Router interface {
-	SetupRoutes()
-	SetupTemplates()
-	SetupStaticFiles()
+	SetupRoutes(routes []Route)
+	SetupTemplates(cfg TemplateConfig)
 	SetupTLS(enabled bool, domains ...string) error
 
 	// NOTE: it's blocking method
-	Serve()
+	Serve(host, port string, h RouterHandler) error
 }
 
 type RouterHandler interface {
@@ -40,7 +39,7 @@ type router struct {
 	engine *gin.Engine
 }
 
-func New() *router {
+func New() Router {
 	return &router{
 		engine: gin.New(),
 	}
