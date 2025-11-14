@@ -3,6 +3,7 @@ module github.com/Sagleft/tma-swissknife
 go 1.23.8
 
 require (
+	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/gin-gonic/autotls v1.1.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/kelseyhightower/envconfig v1.4.0

@@ -60,7 +60,7 @@ func HashAssets(assetsPath string) (map[string]string, error) {
 		}
 
 		// Вычисляем MD5 через вашу функцию
-		hash := helpers.MD5(b)
+		hash := helpers.XxHash64Base32(b)
 
 		// Формируем путь относительно assetsPath
 		rel, rerr := filepath.Rel(assetsPath, path)
