@@ -79,3 +79,10 @@ func HashAssets(assetsPath string) (map[string]string, error) {
 
 	return manifest, nil
 }
+
+func ternary[T any](condition bool, a, b T) T {
+	if condition {
+		return a
+	}
+	return b
+}

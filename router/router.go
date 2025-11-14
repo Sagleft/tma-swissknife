@@ -75,15 +75,22 @@ func (r *router) Serve(host, port string, h RouterHandler) error {
 }
 
 type Route struct {
-	Endpoint   string
+	// required
+	Endpoint string
+	Handler  gin.HandlerFunc
+
+	// optional
 	HttpMethod HttpMethod
-	Handler    gin.HandlerFunc
 }
 
 func (r *router) SetupRoutes(routes []Route) {
 	for _, routeData := range routes {
 		r.engine.Handle(
-			string(routeData.HttpMethod),
+			ternary(
+				routeData.HttpMethod == "",
+				string(HttpGET),
+				string(routeData.HttpMethod),
+			),
 			routeData.Endpoint,
 			routeData.Handler,
 		)
