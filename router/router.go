@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"text/template"
 
 	"github.com/Sagleft/tma-swissknife/rest"
 	"github.com/gin-gonic/autotls"
@@ -24,7 +25,7 @@ var errNotFound = errors.New("not found")
 // all setups must be called before Serve()
 type Router interface {
 	SetupRoutes(routes []Route)
-	SetupTemplates(cfg TemplateConfig)
+	SetupTemplates(cfg TemplateConfig) error
 	SetupTLS(enabled bool, domains ...string) error
 
 	// NOTE: it's blocking method
@@ -95,15 +96,39 @@ type TemplateConfig struct {
 	StaticAssetsPath string   `json:"staticFilesPath"` // example: "./public"
 }
 
-func (r *router) SetupTemplates(cfg TemplateConfig) {
+func (r *router) SetupTemplates(cfg TemplateConfig) error {
 	if len(cfg.CustomDelimeters) > 1 {
 		r.engine.Delims(cfg.CustomDelimeters[0], cfg.CustomDelimeters[1])
 	}
 
 	if cfg.StaticAssetsPath != "" {
-		r.engine.Static("/assets", cfg.StaticAssetsPath)
+		if err := r.registerStaticAssets(cfg.StaticAssetsPath); err != nil {
+			return fmt.Errorf("reg assets: %w", err)
+		}
 	}
+
 	r.engine.LoadHTMLGlob(cfg.Path)
+	return nil
+}
+
+func (r *router) registerStaticAssets(assetsPath string) error {
+	hashes, err := HashAssets(assetsPath)
+	if err != nil {
+		return fmt.Errorf("hash assets: %w", err)
+	}
+
+	// asset version system
+	r.engine.SetFuncMap(template.FuncMap{
+		"versioned": func(path string) string {
+			if hash, isExists := hashes[path]; isExists {
+				return "/assets/" + path + "?v=" + hash
+			}
+			return "/assets/" + path
+		},
+	})
+
+	r.engine.Static("/assets", assetsPath)
+	return nil
 }
 
 func (r *router) SetupTLS(enabled bool, domains ...string) error {

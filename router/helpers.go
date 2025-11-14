@@ -2,9 +2,14 @@ package router
 
 import (
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
+	"github.com/Sagleft/tma-swissknife/helpers"
 	"github.com/Sagleft/tma-swissknife/rest"
 	"github.com/gin-gonic/gin"
 )
@@ -24,4 +29,53 @@ func maskError(ctx *gin.Context, err error, maskedErrInfo string) {
 		http.StatusInternalServerError,
 		rest.ErrorMessage(errors.New(maskedErrInfo)),
 	)
+}
+
+// path -> hash
+func HashAssets(assetsPath string) (map[string]string, error) {
+	manifest := make(map[string]string)
+
+	// Рекурсивно обходим директорию
+	walkFn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			// пропускаем ошибки доступа
+			return nil
+		}
+		// Игнорируем директории
+		if info.IsDir() {
+			return nil
+		}
+
+		// Открываем файл
+		f, ferr := os.Open(path)
+		if ferr != nil {
+			return nil
+		}
+		defer f.Close()
+
+		// Читаем весь файл
+		b, err := io.ReadAll(f)
+		if err != nil {
+			return nil
+		}
+
+		// Вычисляем MD5 через вашу функцию
+		hash := helpers.MD5(b)
+
+		// Формируем путь относительно assetsPath
+		rel, rerr := filepath.Rel(assetsPath, path)
+		if rerr != nil {
+			rel = path
+		}
+
+		manifest[rel] = hash
+		return nil
+	}
+
+	// Начинаем обход
+	if err := filepath.Walk(assetsPath, walkFn); err != nil {
+		return nil, fmt.Errorf("scan %q: %w", assetsPath, err)
+	}
+
+	return manifest, nil
 }
