@@ -5,6 +5,7 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"encoding/hex"
+	"strings"
 
 	"github.com/cespare/xxhash/v2"
 )
@@ -21,5 +22,8 @@ func XxHash64Base32(data []byte) string {
 	buf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(buf, hash)
 	// Кодируем байты в base32 без padding
-	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(buf)
+	return strings.ToLower(
+		base32.StdEncoding.WithPadding(base32.NoPadding).
+			EncodeToString(buf),
+	)
 }
