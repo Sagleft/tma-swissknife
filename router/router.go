@@ -27,6 +27,7 @@ type Router interface {
 	SetupRoutes(routes []Route)
 	SetupTemplates(cfg TemplateConfig) error
 	SetupTLS(enabled bool, domains ...string) error
+	SetupErrorHandler(func(error))
 
 	// NOTE: it's blocking method
 	Serve(host, port string, h RouterHandler) error
@@ -37,7 +38,8 @@ type RouterHandler interface {
 }
 
 type router struct {
-	engine *gin.Engine
+	engine     *gin.Engine
+	errHandler func(error)
 }
 
 func New() Router {
@@ -81,6 +83,34 @@ type Route struct {
 
 	// optional
 	HttpMethod HttpMethod
+}
+
+func (r *router) SetupErrorHandler(f func(error)) {
+	r.errHandler = f
+	r.engine.Use(r.errorMiddleware)
+}
+
+func (r *router) errorMiddleware(c *gin.Context) {
+	defer func() {
+		if err := recover(); err != nil {
+			if r.errHandler != nil {
+				r.errHandler(fmt.Errorf("panic: %v", err))
+			}
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
+	}()
+
+	c.Next()
+
+	for _, e := range c.Errors {
+		if r.errHandler != nil {
+			r.errHandler(e.Err)
+		}
+	}
+
+	if len(c.Errors) > 0 && !c.IsAborted() {
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
 }
 
 func (r *router) SetupRoutes(routes []Route) {
