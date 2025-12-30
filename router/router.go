@@ -162,6 +162,12 @@ func (r *router) registerStaticAssets(assetsPath string) error {
 			}
 			return "/assets/" + path
 		},
+		"getIcon": func(tag string) string {
+			if tag == "" {
+				return "star"
+			}
+			return tag
+		},
 	})
 
 	r.engine.Static("/assets", assetsPath)
