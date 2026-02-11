@@ -7,7 +7,6 @@ import (
 	"text/template"
 
 	"github.com/Sagleft/tma-swissknife/rest"
-	"github.com/gin-gonic/autotls"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,7 +25,7 @@ var errNotFound = errors.New("not found")
 type Router interface {
 	SetupRoutes(routes []Route)
 	SetupTemplates(cfg TemplateConfig) error
-	SetupTLS(enabled bool, domains ...string) error
+	SetupTLS(TLSConfig)
 	SetupErrorHandler(func(error))
 
 	// NOTE: it's blocking method
@@ -40,6 +39,13 @@ type RouterHandler interface {
 type router struct {
 	engine     *gin.Engine
 	errHandler func(error)
+	tls        TLSConfig
+}
+
+type TLSConfig struct {
+	Enabled      bool   `json:"enabled"`
+	CertFilepath string `json:"certFilepath"` // example: localhost.pem
+	KeyFilepath  string `json:"keyFilepath"`  // example: localhost-key.pem
 }
 
 func New() Router {
@@ -73,7 +79,13 @@ func (r *router) Serve(host, port string, h RouterHandler) error {
 		ctx.JSON(http.StatusOK, response)
 	})
 
-	return r.engine.Run(fmt.Sprintf("%s:%s", host, port))
+	addr := fmt.Sprintf("%s:%s", host, port)
+
+	if r.tls.Enabled {
+		return r.engine.RunTLS(addr, r.tls.CertFilepath, r.tls.KeyFilepath)
+	}
+
+	return r.engine.Run(addr)
 }
 
 type Route struct {
@@ -174,9 +186,6 @@ func (r *router) registerStaticAssets(assetsPath string) error {
 	return nil
 }
 
-func (r *router) SetupTLS(enabled bool, domains ...string) error {
-	if enabled {
-		return autotls.Run(r.engine, domains...)
-	}
-	return nil
+func (r *router) SetupTLS(cfg TLSConfig) {
+	r.tls = cfg
 }
