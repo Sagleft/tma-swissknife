@@ -25,7 +25,7 @@ var errNotFound = errors.New("not found")
 type Router interface {
 	SetupRoutes(routes []Route)
 	SetupTemplates(cfg TemplateConfig) error
-	SetupTLS(TLSConfig)
+	SetupTLS(TLSConfig) error
 	SetupErrorHandler(func(error))
 
 	// NOTE: it's blocking method
@@ -186,6 +186,14 @@ func (r *router) registerStaticAssets(assetsPath string) error {
 	return nil
 }
 
-func (r *router) SetupTLS(cfg TLSConfig) {
+func (r *router) SetupTLS(cfg TLSConfig) error {
+	if cfg.CertFilepath == "" {
+		return errors.New("cert file path not set")
+	}
+	if cfg.KeyFilepath == "" {
+		return errors.New("cert key file path not set")
+	}
+
 	r.tls = cfg
+	return nil
 }
