@@ -66,13 +66,13 @@ func (r *router) Serve(host, port string, h RouterHandler) error {
 	r.engine.POST("/api", func(ctx *gin.Context) {
 		var req rest.Request
 		if err := ctx.ShouldBind(&req); err != nil {
-			maskError(ctx, fmt.Errorf("parse req: %w", err), "failed to process request")
+			handleError(ctx, fmt.Errorf("parse req: %w", err))
 			return
 		}
 
 		response, err := h.HandleRequest(req)
 		if err != nil {
-			maskError(ctx, fmt.Errorf("%q: %w", req.Method, err), "failed to handle request")
+			handleError(ctx, fmt.Errorf("%q: %w", req.Method, err))
 			return
 		}
 

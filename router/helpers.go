@@ -1,10 +1,8 @@
 package router
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,12 +16,10 @@ func onSuccess(ctx *gin.Context, data any) {
 	ctx.JSON(http.StatusOK, rest.Success(data))
 }
 
-func maskError(ctx *gin.Context, err error, maskedErrInfo string) {
-	log.Println(err)
-
+func handleError(ctx *gin.Context, err error) {
 	ctx.JSON(
 		http.StatusInternalServerError,
-		rest.ErrorMessage(errors.New(maskedErrInfo)),
+		rest.ErrorMessage(err),
 	)
 }
 
