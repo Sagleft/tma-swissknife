@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 	"text/template"
 
 	"github.com/Sagleft/tma-swissknife/rest"
@@ -105,8 +106,12 @@ func (r *router) SetupErrorHandler(f func(error)) {
 func (r *router) errorMiddleware(c *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
+			// Получаем стек вызовов
+			stack := make([]byte, 4096)
+			n := runtime.Stack(stack, true)
+
 			if r.errHandler != nil {
-				r.errHandler(fmt.Errorf("panic: %v", err))
+				r.errHandler(fmt.Errorf("panic: %v, stack: %s", err, stack[:n]))
 			}
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}
