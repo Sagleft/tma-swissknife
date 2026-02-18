@@ -28,6 +28,7 @@ type Router interface {
 	SetupTemplates(cfg TemplateConfig) error
 	SetupTLS(TLSConfig) error
 	SetupErrorHandler(func(error))
+	SetTrustedProxies([]string) error
 
 	// NOTE: it's blocking method
 	Serve(host, port string, h RouterHandler) error
@@ -201,4 +202,8 @@ func (r *router) SetupTLS(cfg TLSConfig) error {
 
 	r.tls = cfg
 	return nil
+}
+
+func (r *router) SetTrustedProxies(p []string) error {
+	return r.engine.SetTrustedProxies(p)
 }
