@@ -29,19 +29,21 @@ type Router interface {
 	SetupTLS(TLSConfig) error
 	SetupErrorHandler(func(error))
 	SetTrustedProxies([]string) error
+	EnableAutoPong(enabled bool)
 
 	// NOTE: it's blocking method
 	Serve(host, port string, h RouterHandler) error
 }
 
 type RouterHandler interface {
-	HandleRequest(rest.Request) (rest.Message, error)
+	HandleRequest(*gin.Context, rest.Request) (rest.Message, error)
 }
 
 type router struct {
-	engine     *gin.Engine
-	errHandler func(error)
-	tls        TLSConfig
+	engine      *gin.Engine
+	errHandler  func(error)
+	tls         TLSConfig
+	pongEnabled bool
 }
 
 type TLSConfig struct {
@@ -56,10 +58,16 @@ func New() Router {
 	}
 }
 
+func (r *router) EnableAutoPong(enabled bool) {
+	r.pongEnabled = enabled
+}
+
 func (r *router) Serve(host, port string, h RouterHandler) error {
-	r.engine.GET("/ping", func(ctx *gin.Context) {
-		onSuccess(ctx, "pong")
-	})
+	if r.pongEnabled {
+		r.engine.GET("/ping", func(ctx *gin.Context) {
+			onSuccess(ctx, "pong")
+		})
+	}
 
 	r.engine.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, rest.ErrorMessage(errNotFound))
@@ -72,7 +80,7 @@ func (r *router) Serve(host, port string, h RouterHandler) error {
 			return
 		}
 
-		response, err := h.HandleRequest(req)
+		response, err := h.HandleRequest(ctx, req)
 		if err != nil {
 			handleError(ctx, fmt.Errorf("%q: %w", req.Method, err))
 			return
