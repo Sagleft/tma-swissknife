@@ -82,7 +82,7 @@ func (r *router) Serve(host, port string, h RouterHandler) error {
 
 		response, err := h.HandleRequest(ctx, req)
 		if err != nil {
-			handleError(ctx, fmt.Errorf("%q: %w", req.Method, err))
+			handleError(ctx, err)
 			return
 		}
 
